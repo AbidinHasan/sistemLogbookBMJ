@@ -32,7 +32,7 @@ const LogOut = () => {
 <style scoped>
 .topbar {
   position: sticky;
-  z-index: 5;
+  z-index: 20;
   top: 0;
   background: rgb(59, 59, 97);
   box-shadow: 0 2px 12px rgb(28 46 74 / 7%);

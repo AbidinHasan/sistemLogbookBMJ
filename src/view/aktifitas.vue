@@ -26,6 +26,7 @@ import editPopUp from "../components/popUpDropdown.vue";
 
 const auth = useAuthStore();
 const notes = ref([]);
+const mesinList = ref([]);
 const searchQuery = ref("");
 const isModalOpen = ref(false);
 const isLoading = ref(false);
@@ -63,8 +64,8 @@ const tutupSummary = () => {
   summaryPerform.value = false;
 };
 
-const previewCaption = (caption) => {
-  selectedCaption.value = caption;
+const previewCaption = (item) => {
+  selectedCaption.value = item;
   showCaptionModal.value = true;
 };
 
@@ -211,6 +212,15 @@ const filteredNotes = computed(() => {
 
   return result.sort((a, b) => new Date(b.tanggal) - new Date(a.tanggal));
 });
+
+const loadDaftarMesin = async () => {
+  try {
+    const response = await backendApi.get("/mtc/mesin", { timeout: 30000 });
+    mesinList.value = response.data.results || [];
+  } catch (err) {
+    console.error(err);
+  }
+};
 
 const loadNotes = async () => {
   loading.value = true;
@@ -399,7 +409,7 @@ const resetForm = () => {
     statusMesin: "Downtime",
     tanggal: today,
     status: "On Progress",
-    mesin: "Roto",
+    mesin: "",
   };
   selectedFile.value = null;
 };
@@ -454,31 +464,68 @@ const getFileIcon = (url) => {
 
 const exportToExcel = () => {
   const data = filteredNotes.value.map((item) => ({
-    Tanggal: formatDate(item.tanggal),
-    Caption: item.caption,
-    Dokumentasi: item.r2_key ? API.dokumen + item.r2_key : "",
-    Status: item.status,
+    Tanggal: formatDateOnly(item.tanggal),
+    Shift: item.shift,
+    Grup: item.grup_shift,
+    Machine: item.mesin,
+    Description: item.deskripsi,
+    Root_Cause: item.rootcause,
+    Start_Time: formatDateGetJam(item.tanggal),
+    End_Time: formatDateGetJam(item.finish),
+    Status: item.status_mesin,
     Created: formatJam(item.created_at),
-    Pembuat: item.user.fullname,
-    Closed: item.finish ? formatDateIndo(item.finish) : "",
+    Nama: item.user.fullname,
     UpdateBy: item.closeby.fullname,
   }));
 
   const worksheet = XLSX.utils.json_to_sheet(data);
   worksheet["!cols"] = [
     { wch: 17 }, // Tanggal
-    { wch: 50 }, // Caption
-    { wch: 15 }, //Dokumentasi
-    { wch: 15 }, // Status
-    { wch: 25 },
+    { wch: 10 },
+    { wch: 10 },
+    { wch: 10 },
+    { wch: 10 },
     { wch: 15 },
-    { wch: 25 },
+    { wch: 15 },
   ];
   const workbook = XLSX.utils.book_new();
 
   XLSX.utils.book_append_sheet(workbook, worksheet, "Catatan");
 
   XLSX.writeFile(workbook, `Logbook MTC_${statusFilter.value || "Semua"}.xlsx`);
+};
+
+const formatDateOnly = (date) => {
+  if (!date) {
+    return "Tanpa tanggal";
+  }
+
+  const parsedDate = new Date(date.replace(" ", "T"));
+  return Number.isNaN(parsedDate.getTime())
+    ? date
+    : new Intl.DateTimeFormat("id-ID", {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      })
+        .format(parsedDate)
+        .replace(" pukul ", " ");
+};
+
+const formatDateGetJam = (date) => {
+  if (!date) {
+    return "Tanpa tanggal";
+  }
+
+  const parsedDate = new Date(date.replace(" ", "T"));
+  return Number.isNaN(parsedDate.getTime())
+    ? date
+    : new Intl.DateTimeFormat("id-ID", {
+        hour: "2-digit",
+        minute: "2-digit",
+      })
+        .format(parsedDate)
+        .replace(" pukul ", " ");
 };
 
 const formatDate = (date) => {
@@ -571,6 +618,7 @@ const checkSession = () => {
 
 onMounted(() => {
   loadNotes();
+  loadDaftarMesin();
   checkSession();
   window.addEventListener("scroll", handleScroll);
 });
@@ -597,47 +645,45 @@ onUnmounted(() => {
         <div>
           <h1>Manajemen Aktifitas</h1>
         </div>
-
-        <div class="note-count">
-          <div class="stat-card performa" @click="bukaSummary">
-            <strong>{{ completedPersen }} %</strong>
-            <span>Performa</span>
-          </div>
-
-          <div
-            class="stat-card completed"
-            @click="statusFilter = `No Downtime`"
-          >
-            <strong>{{ statusMesinThisYear.NDT }}</strong>
-            <span>No Downtime</span>
-          </div>
-
-          <div class="stat-card pending" @click="statusFilter = `Downtime`">
-            <strong>{{ statusMesinThisYear.DT }}</strong>
-            <span>Downtime</span>
-          </div>
-
-          <div class="stat-card progress" @click="statusFilter = `Monitoring`">
-            <strong>{{ statusMesinThisYear.MNTR }}</strong>
-            <span>Monitoring</span>
-          </div>
-
-          <div class="stat-card completed" @click="statusFilter = `Completed`">
-            <strong>{{ statusThisYear.completed }}</strong>
-            <span>Completed</span>
-          </div>
-
-          <div class="stat-card progress" @click="statusFilter = `On Progress`">
-            <strong>{{ statusThisYear.onProgress }}</strong>
-            <span>On Progress</span>
-          </div>
-
-          <div class="stat-card pending" @click="statusFilter = `Pending`">
-            <strong>{{ statusThisYear.pending }}</strong>
-            <span>Pending</span>
-          </div>
-        </div>
       </section>
+
+      <div class="note-count">
+        <div class="stat-card performa" @click="bukaSummary">
+          <strong>{{ completedPersen }} %</strong>
+          <span>Performa</span>
+        </div>
+
+        <div class="stat-card pending" @click="statusFilter = `Downtime`">
+          <strong>{{ statusMesinThisYear.DT }}</strong>
+          <span>Downtime</span>
+        </div>
+
+        <div class="stat-card completed" @click="statusFilter = `No Downtime`">
+          <strong>{{ statusMesinThisYear.NDT }}</strong>
+          <span>No Downtime</span>
+        </div>
+
+        <div class="stat-card progress" @click="statusFilter = `Monitoring`">
+          <strong>{{ statusMesinThisYear.MNTR }}</strong>
+          <span>Monitoring</span>
+        </div>
+
+        <div class="stat-card completed" @click="statusFilter = `Completed`">
+          <strong>{{ statusThisYear.completed }}</strong>
+          <span>Completed</span>
+        </div>
+
+        <div class="stat-card progress" @click="statusFilter = `On Progress`">
+          <strong>{{ statusThisYear.onProgress }}</strong>
+          <span>On Progress</span>
+        </div>
+
+        <div class="stat-card pending" @click="statusFilter = `Pending`">
+          <strong>{{ statusThisYear.pending }}</strong>
+          <span>Pending</span>
+        </div>
+      </div>
+
       <BtnExport @click="exportToExcel" />
       <section class="notes-section" aria-label="Daftar catatan">
         <div class="section-heading">
@@ -645,6 +691,14 @@ onUnmounted(() => {
             <h2>Job List</h2>
             <SwitchView v-model="listView" />
           </div>
+          <a
+            v-if="statusFilter"
+            @click="statusFilter = ``"
+            style="cursor: pointer; text-decoration: underline"
+            >Reset Kategori</a
+          >
+          <!--Filter Status-->
+          <h2>Kategori: {{ statusFilter ? statusFilter : "All" }}</h2>
 
           <label class="search-box">
             <span class="search-icon" aria-hidden="true">⌕</span>
@@ -677,7 +731,7 @@ onUnmounted(() => {
               :key="item.id"
               class="note-card"
             >
-              <div v-if="isImage(item.url)" class="note-image-wrap">
+              <div v-if="isImage(item.r2_key)" class="note-image-wrap">
                 <img
                   class="note-image"
                   :src="API.dokumen + item.r2_key"
@@ -689,7 +743,7 @@ onUnmounted(() => {
                 </div>
               </div>
               <div
-                v-if="isVideo(item.url)"
+                v-if="isVideo(item.r2_key)"
                 class="note-image-wrap video-preview"
                 @click="Review(API.dokumen + item.r2_key)"
               >
@@ -707,9 +761,12 @@ onUnmounted(() => {
                 </div>
               </div>
 
-              <div v-if="getFileIcon(item.url)" class="note-image-placeholder">
+              <div
+                v-if="getFileIcon(item.r2_key)"
+                class="note-image-placeholder"
+              >
                 <img
-                  :src="getFileIcon(item.url)"
+                  :src="getFileIcon(item.r2_key)"
                   @click="Review(API.dokumen + item.r2_key)"
                 />
                 <div class="image-tag" :class="item.status?.toLowerCase()">
@@ -717,7 +774,7 @@ onUnmounted(() => {
                 </div>
               </div>
               <div
-                v-if="!isVideo(item.url) && !isImage(item.url)"
+                v-if="!isVideo(item.r2_key) && !isImage(item.r2_key)"
                 class="note-image-placeholder"
               >
                 <img :src="coretan" />
@@ -744,16 +801,20 @@ onUnmounted(() => {
                 </p>
                 <p class="note-caption">
                   {{
-                    item.caption?.length > 100
-                      ? item.caption.substring(0, 150) + "..."
-                      : item.caption
+                    item.deskripsi?.length > 50
+                      ? item.deskripsi.substring(0, 50) + "..."
+                      : item.deskripsi
                   }}
                 </p>
-                <button
-                  v-if="item.caption?.length > 150"
-                  class="preview-btn"
-                  @click="previewCaption(item.caption)"
-                >
+                <strong class="note-what">Root Cause:</strong>
+                <p class="note-caption">
+                  {{
+                    item.rootcause?.length > 50
+                      ? item.rootcause.substring(0, 50) + "..."
+                      : item.rootcause
+                  }}
+                </p>
+                <button class="preview-btn" @click="previewCaption(item)">
                   Baca Selengkapnya ...
                 </button>
               </div>
@@ -777,15 +838,14 @@ onUnmounted(() => {
                 <div class="status-user">
                   <span
                     class="list-status"
-                    :class="item.status?.toLowerCase().replace(' ', '-')"
-                  >
-                    {{ item.status }}
-                  </span>
-                  <span
-                    class="list-status"
                     :class="item.status_mesin?.toLowerCase().replace(' ', '-')"
                   >
                     {{ item.status_mesin }}
+                  </span>
+                  <span
+                    class="list-status-dot"
+                    :class="item.status?.toLowerCase().replace(' ', '-')"
+                  >
                   </span>
                   <button
                     class="list-status-edit"
@@ -879,7 +939,7 @@ onUnmounted(() => {
     >
       <div class="caption-modal-preview">
         <div
-          v-if="selectedItem && isImage(selectedItem.url)"
+          v-if="selectedItem && isImage(selectedItem.r2_key)"
           class="note-image-wrap-list"
         >
           <img
@@ -894,7 +954,7 @@ onUnmounted(() => {
           </div>
         </div>
         <div
-          v-if="selectedItem && isVideo(selectedItem.url)"
+          v-if="selectedItem && isVideo(selectedItem.r2_key)"
           class="note-image-wrap video-preview"
           @click="Review(API.dokumen + selectedItem.r2_key)"
         >
@@ -912,21 +972,22 @@ onUnmounted(() => {
           </div>
         </div>
         <div
-          v-if="selectedItem && getFileIcon(selectedItem.url)"
+          v-else-if="selectedItem && getFileIcon(selectedItem.url)"
           class="note-image-placeholder"
         >
           <img
-            :src="getFileIcon(selectedItem.url)"
+            :src="getFileIcon(selectedItem.r2_key)"
             @click="Review(API.dokumen + selectedItem.r2_key)"
           />
         </div>
+
         <div class="job-title-wrap">
-          <h3>{{ formatDate(selectedItem?.tanggal) }}</h3>
+          <h3>Mesin: {{ selectedItem.mesin }}</h3>
           <DownloadKecil
             v-if="
-              isImage(selectedItem.url) ||
-              isVideo(selectedItem.url) ||
-              getFileIcon(selectedItem.url)
+              isImage(selectedItem.r2_key) ||
+              isVideo(selectedItem.r2_key) ||
+              getFileIcon(selectedItem.r2_key)
             "
             @click="
               downloadFile(
@@ -936,9 +997,13 @@ onUnmounted(() => {
             "
           />
         </div>
-
+        <strong>Deskripsi:</strong>
         <p class="caption-text">
-          {{ selectedItem?.caption }}
+          {{ selectedItem?.deskripsi }}
+        </p>
+        <strong>Root Cause:</strong>
+        <p class="caption-text">
+          {{ selectedItem?.rootcause }}
         </p>
         <p class="caption-text-mark">
           created by: {{ selectedItem.user.fullname }}
@@ -955,10 +1020,16 @@ onUnmounted(() => {
       <div class="caption-modal" @click.stop>
         <button class="close-btn" @click="closeCaptionModal">✕</button>
 
-        <h3>Catatan</h3>
-
+        <h3>{{ selectedCaption.mesin }}</h3>
+        <p class="caption-tgl">
+          {{ formatDate(selectedCaption.tanggal) }}
+        </p>
         <p class="caption-text">
-          {{ selectedCaption }}
+          {{ selectedCaption.deskripsi }}
+        </p>
+        <strong>Root Cause:</strong>
+        <p class="caption-text">
+          {{ selectedCaption.rootcause }}
         </p>
       </div>
     </div>
@@ -1037,8 +1108,14 @@ onUnmounted(() => {
           <label class="form-field">
             <span>Machine</span>
             <select v-model="form.mesin">
-              <option>Roto</option>
-              <option>Offset</option>
+              <option value="">Pilih Mesin</option>
+              <option
+                v-for="item in mesinList"
+                :key="item.id"
+                :value="item.caption"
+              >
+                {{ item.caption }}
+              </option>
             </select>
           </label>
           <label class="form-field">
@@ -1312,9 +1389,10 @@ onUnmounted(() => {
 
 .note-count {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(7, 1fr);
   gap: 14px;
-  width: 40%;
+  width: 100%;
+  margin-bottom: 70px;
   user-select: none;
   -webkit-user-select: none;
 }
@@ -1374,8 +1452,21 @@ onUnmounted(() => {
 }
 @media (max-width: 768px) {
   .note-count {
-    grid-template-columns: repeat(2, 1fr);
-    width: 60%;
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding-bottom: 4px;
+    margin-bottom: 24px;
+
+    /* Hilangkan scrollbar */
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .note-count > * {
+    flex: 0 0 100px; /* lebar card */
+    min-width: 100px;
   }
   .stat-card strong {
     font-size: 12px;
@@ -1562,6 +1653,9 @@ onUnmounted(() => {
   font-size: 15px;
 }
 
+.note-what {
+  color: #000000;
+}
 .note-caption {
   display: -webkit-box;
   min-height: 66px;
@@ -2002,6 +2096,12 @@ onUnmounted(() => {
   .modal-heading h2 {
     font-size: 21px;
   }
+
+  .preview-btn {
+    position: absolute;
+    width: 130px;
+    top: 200px;
+  }
 }
 
 /*
@@ -2116,18 +2216,46 @@ onUnmounted(() => {
   }
 }
 
-.on.progress,
-.on-progress {
+.list-status-dot {
+  width: 19px;
+  height: 19px;
+  border-radius: 50%;
+  animation: pulse-glow 2.5s infinite ease-in-out;
+}
+
+.list-status-dot.on.progress,
+.list-status-dot.on-progress {
   background: #ff9800;
+  box-shadow: 0 0 8px #ff9800;
 }
 
-.completed {
+.list-status-dot.completed {
   background: #22c55e;
+  box-shadow: 0 0 8px #22c55e;
 }
 
-.pending {
+.list-status-dot.pending {
   background: #ef4444;
+  box-shadow: 0 0 8px #ef4444;
 }
+
+@keyframes pulse-glow {
+  0% {
+    opacity: 0.4;
+    transform: scale(0.95);
+  }
+
+  50% {
+    opacity: 1;
+    transform: scale(1.1);
+  }
+
+  100% {
+    opacity: 0.4;
+    transform: scale(0.95);
+  }
+}
+
 .monitoring {
   background: #ff9800;
 }
@@ -2180,6 +2308,7 @@ onUnmounted(() => {
 .status-user {
   display: flex;
   align-items: center;
+  gap: 10px;
 }
 
 .list-lamawaktu {
@@ -2285,11 +2414,18 @@ onUnmounted(() => {
 .job-title-wrap h2 {
   margin: 0;
 }
-@media (max-width: 600px) {
+@media (max-width: 700px) {
   .job-title-wrap {
     width: 100%;
     justify-content: space-between;
     gap: 0;
+  }
+
+  .list-status {
+    font-size: 0.5rem;
+  }
+  .list-lamawaktu {
+    font-size: 0.7rem;
   }
 }
 
@@ -2332,5 +2468,13 @@ onUnmounted(() => {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 10px;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  width: 100%;
+  gap: 16px;
+  margin-bottom: 24px;
 }
 </style>

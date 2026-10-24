@@ -18,10 +18,10 @@ import RadioSelect from "../components/radioSelect.vue";
 import RadioFormulir from "../components/RadioutkForm.vue";
 import summaryMonth from "../components/ChardPerform.vue";
 import SwitchView from "../components/SwitchView.vue";
-import Multiselect from "vue-multiselect";
 
 const auth = useAuthStore();
 const notes = ref([]);
+const mesinList = ref([]);
 const searchQuery = ref("");
 const isModalOpen = ref(false);
 const isLoading = ref(false);
@@ -286,6 +286,15 @@ const filteredNotes = computed(() => {
 
   return result.sort((a, b) => new Date(b.tanggal) - new Date(a.tanggal));
 });
+
+const loadDaftarMesin = async () => {
+  try {
+    const response = await backendApi.get("/mtc/mesin", { timeout: 30000 });
+    mesinList.value = response.data.results || [];
+  } catch (err) {
+    console.error(err);
+  }
+};
 
 const loadNotes = async () => {
   loading.value = true;
@@ -590,6 +599,7 @@ const checkSession = () => {
 
 onMounted(() => {
   loadNotes();
+  loadDaftarMesin();
   checkSession();
   window.addEventListener("scroll", handleScroll);
 });
@@ -627,27 +637,6 @@ onUnmounted(() => {
       <section class="stats-grid">
         <div
           class="stat-card-perform-legend"
-          @click="statusFilter = `No Downtime`"
-        >
-          <div class="legend-info">
-            <span class="legend-dot ijo"></span>
-            <small>{{ statusMesin.NDT }}</small>
-            <div>
-              <span>No Downtime</span>
-              <small>{{ MesinPersen.NDT }}%</small>
-            </div>
-          </div>
-
-          <div class="progress">
-            <div
-              class="progress-fill ijo"
-              :style="{ width: statusMesin.NDTpersen + '%' }"
-            ></div>
-          </div>
-        </div>
-
-        <div
-          class="stat-card-perform-legend"
           @click="statusFilter = `Downtime`"
         >
           <div class="legend-info">
@@ -663,6 +652,27 @@ onUnmounted(() => {
             <div
               class="progress-fill merah"
               :style="{ width: statusMesin.DTpersen + '%' }"
+            ></div>
+          </div>
+        </div>
+
+        <div
+          class="stat-card-perform-legend"
+          @click="statusFilter = `No Downtime`"
+        >
+          <div class="legend-info">
+            <span class="legend-dot ijo"></span>
+            <small>{{ statusMesin.NDT }}</small>
+            <div>
+              <span>No Downtime</span>
+              <small>{{ MesinPersen.NDT }}%</small>
+            </div>
+          </div>
+
+          <div class="progress">
+            <div
+              class="progress-fill ijo"
+              :style="{ width: statusMesin.NDTpersen + '%' }"
             ></div>
           </div>
         </div>
@@ -781,8 +791,13 @@ onUnmounted(() => {
         <div class="mesin-filter">
           <select v-model="filterMesin">
             <option value="">Mesin</option>
-            <option value="Roto">Roto</option>
-            <option value="Offset">Offset</option>
+            <option
+              v-for="item in mesinList"
+              :key="item.id"
+              :value="item.caption"
+            >
+              {{ item.caption }}
+            </option>
           </select>
         </div>
 
@@ -806,8 +821,8 @@ onUnmounted(() => {
             <a
               v-if="statusFilter"
               @click="statusFilter = ``"
-              style="cursor: pointer"
-              >Show All</a
+              style="cursor: pointer; text-decoration: underline"
+              >Reset Kategori</a
             >
             <!--Filter Status-->
             <h2>Kategori: {{ statusFilter ? statusFilter : "All" }}</h2>
@@ -915,19 +930,17 @@ onUnmounted(() => {
                         : item.deskripsi
                     }}
                   </p>
-                  <strong class="note-what">Root Cause:</strong>
-                  <p class="note-caption">
+                  <strong class="note-what" v-if="!isMobile"
+                    >Root Cause:</strong
+                  >
+                  <p class="note-caption" v-if="isMobile">
                     {{
                       item.rootcause?.length > 50
                         ? item.rootcause.substring(0, 50) + "..."
                         : item.rootcause
                     }}
                   </p>
-                  <button
-                    v-if="item.deskripsi?.length > 20"
-                    class="preview-btn"
-                    @click="previewCaption(item)"
-                  >
+                  <button class="preview-btn" @click="previewCaption(item)">
                     Baca Selengkapnya ...
                   </button>
                   <div class="note-actions">
@@ -2073,7 +2086,10 @@ onUnmounted(() => {
     font-size: 21px;
   }
   .preview-btn {
+    position: absolute;
+    display: block;
     width: 160px;
+    top: 200px;
   }
 }
 
@@ -2332,6 +2348,10 @@ onUnmounted(() => {
     width: 100%;
   }
 
+  .list-lamawaktu {
+    font-size: 0.7rem;
+  }
+
   .list-actions button {
     flex: 1;
   }
@@ -2380,11 +2400,15 @@ onUnmounted(() => {
 .job-title-wrap h2 {
   margin: 0;
 }
-@media (max-width: 600px) {
+@media (max-width: 700px) {
   .job-title-wrap {
     width: 100%;
     justify-content: space-between;
     gap: 0;
+  }
+
+  .list-status {
+    font-size: 0.5rem;
   }
 }
 
@@ -2426,8 +2450,7 @@ onUnmounted(() => {
 .btn-wrap {
   position: sticky;
   top: 50px;
-  z-index: 20;
-
+  z-index: 5;
   display: flex;
   flex-wrap: wrap;
   gap: 12px;

@@ -9,7 +9,7 @@ const routes = [
     component: () => import("../view/Home.vue"),
     meta: {
       requiresAuth: true,
-      title: (auth) => `Dashboard SIA | ${auth.fullname}`,
+      title: (auth) => `Dashboard | ${auth.fullname}`,
     },
   },
   {
@@ -23,23 +23,7 @@ const routes = [
   {
     path: "/login",
     component: () => import("../components/LoginModals.vue"),
-    meta: { title: "SIA Login" },
-  },
-  {
-    path: "/stok",
-    component: () => import("../view/stok.vue"),
-    meta: {
-      requiresAuth: true,
-      title: (auth) => `Manajemen Stok | ${auth.fullname}`,
-    },
-  },
-  {
-    path: "/stok/histori",
-    component: () => import("../view/histori.vue"),
-    meta: {
-      requiresAuth: true,
-      title: (auth) => `Histori Stok | ${auth.fullname}`,
-    },
+    meta: { title: "Logbook Login" },
   },
   {
     path: "/profil",
@@ -73,7 +57,7 @@ router.beforeEach((to, from, next) => {
   if (typeof to.meta.title === "function") {
     document.title = to.meta.title(auth);
   } else {
-    document.title = to.meta.title || "SIA";
+    document.title = to.meta.title || "Logbook";
   }
 
   if (auth.username && expired) {

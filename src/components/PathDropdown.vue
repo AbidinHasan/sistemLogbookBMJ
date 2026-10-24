@@ -78,7 +78,7 @@ onBeforeUnmount(() => {
   position: absolute;
   top: 50px;
   right: 15px;
-  z-index: 10;
+  z-index: 99;
 }
 
 .card .separator {
@@ -95,6 +95,7 @@ onBeforeUnmount(() => {
   overflow-y: auto;
   scrollbar-width: thin;
   scrollbar-color: #d3c7db rgba(36, 40, 50, 1);
+  z-index: 30;
 }
 
 .card .list .element {
