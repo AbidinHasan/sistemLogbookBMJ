@@ -1,0 +1,76 @@
+<style scoped>
+.button {
+  position: relative;
+  width: 150px;
+  height: 40px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  border: 1px solid #17795e;
+  border-radius: 10px;
+  background-color: #136f57;
+  overflow: hidden;
+  margin-top: -50px;
+  @media (max-width: 700px) {
+    margin-top: auto;
+  }
+}
+
+.button,
+.button__icon,
+.button__text {
+  transition: all 0.3s;
+}
+
+.button .button__text {
+  transform: translateX(22px);
+  color: #fff;
+  font-weight: 600;
+}
+
+.button .button__icon {
+  position: absolute;
+  transform: translateX(109px);
+  height: 100%;
+  width: 39px;
+  background-color: #cbe0da;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.button .svg {
+  width: 20px;
+  fill: #fff;
+}
+
+.button:hover {
+  background: #17795e;
+}
+
+.button:hover .button__text {
+  color: transparent;
+}
+
+.button:hover .button__icon {
+  width: 148px;
+  transform: translateX(0);
+}
+
+.button:active .button__icon {
+  background-color: #146c54;
+}
+
+.button:active {
+  border: 1px solid #146c54;
+}
+</style>
+
+<template>
+  <button class="button" type="button">
+    <span class="button__text">Export</span>
+    <span class="button__icon"
+      ><img src="../assets/icons8-excel-48.png" width="25px"
+    /></span>
+  </button>
+</template>
