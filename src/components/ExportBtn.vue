@@ -10,7 +10,7 @@
   border-radius: 10px;
   background-color: #136f57;
   overflow: hidden;
-  margin-top: -50px;
+
   @media (max-width: 700px) {
     margin-top: auto;
   }

@@ -746,7 +746,7 @@ onUnmounted(() => {
           </div>
         </div>
       </section>
-      <div class="btn-wrap">
+      <div class="cari-wrap">
         <div class="tgl-filter">
           <select v-model="filterTanggal">
             <option value="">Tgl</option>
@@ -774,6 +774,10 @@ onUnmounted(() => {
           <select v-model="filterTahun">
             <option value="">Tahun</option>
             <option value="2026">2026</option>
+            <option value="2027">2027</option>
+            <option value="2028">2028</option>
+            <option value="2029">2029</option>
+            <option value="2030">2030</option>
           </select>
         </div>
         <div class="mesin-filter">
@@ -839,6 +843,7 @@ onUnmounted(() => {
                 v-for="item in visibleNotes"
                 :key="item.id"
                 class="note-card"
+                @click="previewItem(item)"
               >
                 <div v-if="isImage(item.r2_key)" class="note-image-wrap">
                   <img
@@ -928,9 +933,7 @@ onUnmounted(() => {
                         : item.rootcause
                     }}
                   </p>
-                  <button class="preview-btn" @click="previewCaption(item)">
-                    Baca Selengkapnya ...
-                  </button>
+
                   <div class="note-actions">
                     <DownloadBtn
                       v-if="
@@ -1025,14 +1028,32 @@ onUnmounted(() => {
           <div v-else class="empty-state">
             <h3>
               {{
-                searchQuery ? "Catatan tidak ditemukan" : "Belum ada catatan"
+                filterTanggal
+                  ? "Tanggal tidak ditemukan"
+                  : filterBulan
+                    ? "Bulan tidak ditemukan"
+                    : filterTahun
+                      ? "Tahun tidak ditemukan"
+                      : filterMesin
+                        ? "Mesin tidak ditemukan"
+                        : searchQuery
+                          ? "Data tidak ditemukan"
+                          : "Buat Baru"
               }}
             </h3>
             <p>
               {{
-                searchQuery
-                  ? "Coba gunakan kata kunci yang berbeda."
-                  : "Mulai kumpulkan ide berhargamu."
+                filterTanggal
+                  ? "Not Found"
+                  : filterBulan
+                    ? "Not Found"
+                    : filterTahun
+                      ? "Not Found"
+                      : filterMesin
+                        ? "Not Found"
+                        : searchQuery
+                          ? "Coba gunakan kata kunci yang berbeda."
+                          : "Mulai kumpulkan ide berhargamu."
               }}
             </p>
           </div>
@@ -1047,6 +1068,7 @@ onUnmounted(() => {
       @click.self="closePreviewItem"
     >
       <div class="caption-modal-preview">
+        <button class="close-btn" @click="closePreviewItem">✕</button>
         <div
           v-if="selectedItem && isImage(selectedItem.r2_key)"
           class="note-image-wrap-list"
@@ -2105,7 +2127,7 @@ onUnmounted(() => {
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 10;
+  z-index: 20;
 }
 
 .caption-modal {
@@ -2141,6 +2163,7 @@ onUnmounted(() => {
   background: rgb(183, 25, 25);
   font-size: 20px;
   cursor: pointer;
+  z-index: 10;
 }
 
 .caption-tgl {
@@ -2435,7 +2458,7 @@ onUnmounted(() => {
   display: block;
 }
 
-.btn-wrap {
+.cari-wrap {
   position: sticky;
   top: 50px;
   z-index: 5;
@@ -2539,7 +2562,7 @@ onUnmounted(() => {
 }
 
 @media (max-width: 768px) {
-  .btn-wrap {
+  .cari-wrap {
     display: flex;
     flex-wrap: wrap;
     gap: 6px;
@@ -2691,8 +2714,8 @@ onUnmounted(() => {
   }
 
   .stats-grid > * {
-    flex: 0 0 140px; /* lebar card */
-    min-width: 140px;
+    flex: 0 0 100px; /* lebar card */
+    min-width: 100px;
   }
 
   .stat-card {

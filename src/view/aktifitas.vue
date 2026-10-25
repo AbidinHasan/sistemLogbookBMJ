@@ -27,7 +27,6 @@ import editPopUp from "../components/popUpDropdown.vue";
 const auth = useAuthStore();
 const notes = ref([]);
 const mesinList = ref([]);
-const searchQuery = ref("");
 const isModalOpen = ref(false);
 const isLoading = ref(false);
 const isSaving = ref(false);
@@ -46,6 +45,11 @@ const showPreviewModal = ref(false);
 const selectedItem = ref(null);
 const modalEditStatus = ref(false);
 const deteksiTahun = ref(new Date().getFullYear().toString()); //ini utk performa berubah tiap tahun
+const filterTanggal = ref("");
+const filterBulan = ref("");
+const filterTahun = ref("");
+const filterMesin = ref("");
+const searchQuery = ref("");
 
 const previewItem = (item) => {
   selectedItem.value = item;
@@ -196,7 +200,7 @@ const filteredNotes = computed(() => {
 
   if (query) {
     result = result.filter((note) =>
-      `${note.user.fullname || ""} ${note.caption || ""} ${note.tanggal || ""}`
+      `${note.user.fullname || ""}${note.deskripsi || ""}${note.rootcause || ""}${note.mesin || ""}`
         .toLowerCase()
         .includes(query),
     );
@@ -205,9 +209,30 @@ const filteredNotes = computed(() => {
   if (statusFilter.value) {
     result = result.filter(
       (note) =>
-        note.status === statusFilter.value ||
-        note.status_mesin === statusFilter.value,
+        note.status_mesin === statusFilter.value ||
+        note.status === statusFilter.value,
     );
+  }
+
+  if (filterMesin.value) {
+    result = result.filter((note) => note.mesin === filterMesin.value);
+  }
+
+  // filter tanggal
+  if (filterTanggal.value || filterBulan.value || filterTahun.value) {
+    result = result.filter((note) => {
+      const date = new Date(note.tanggal);
+
+      const tgl = date.getDate();
+      const bulan = date.getMonth() + 1;
+      const tahun = date.getFullYear();
+
+      return (
+        (!filterTanggal.value || tgl === Number(filterTanggal.value)) &&
+        (!filterBulan.value || bulan === Number(filterBulan.value)) &&
+        (!filterTahun.value || tahun === Number(filterTahun.value))
+      );
+    });
   }
 
   return result.sort((a, b) => new Date(b.tanggal) - new Date(a.tanggal));
@@ -605,6 +630,8 @@ const lamaPengerjaan = (mulai, selesai) => {
   return selesai ? waktu : `${waktu} (Open)`;
 };
 
+const isMobile = window.innerWidth <= 768;
+
 onMounted(() => {
   loadNotes();
   loadDaftarMesin();
@@ -672,7 +699,66 @@ onUnmounted(() => {
         </div>
       </div>
 
-      <BtnExport @click="exportToExcel" />
+      <div class="cari-wrap">
+        <div class="tgl-filter">
+          <select v-model="filterTanggal">
+            <option value="">Tgl</option>
+            <option v-for="i in 31" :key="i" :value="i">
+              {{ i }}
+            </option>
+          </select>
+
+          <select v-model="filterBulan">
+            <option value="">Bulan</option>
+            <option value="1">Jan</option>
+            <option value="2">Feb</option>
+            <option value="3">Mar</option>
+            <option value="4">Apr</option>
+            <option value="5">Mei</option>
+            <option value="6">Jun</option>
+            <option value="7">Jul</option>
+            <option value="8">Ags</option>
+            <option value="9">Sep</option>
+            <option value="10">Okt</option>
+            <option value="11">Nov</option>
+            <option value="12">Des</option>
+          </select>
+
+          <select v-model="filterTahun">
+            <option value="">Tahun</option>
+            <option value="2026">2026</option>
+            <option value="2027">2027</option>
+            <option value="2028">2028</option>
+            <option value="2029">2029</option>
+            <option value="2030">2030</option>
+          </select>
+        </div>
+        <BtnExport @click="exportToExcel" />
+        <div class="mesin-filter">
+          <select v-model="filterMesin">
+            <option value="">Mesin</option>
+            <option
+              v-for="item in mesinList"
+              :key="item.id"
+              :value="item.caption"
+            >
+              {{ item.caption }}
+            </option>
+          </select>
+        </div>
+
+        <label class="search-box">
+          <input
+            v-model="searchQuery"
+            type="search"
+            placeholder="🔍 Cari ..."
+          />
+        </label>
+        <button class="btn-primary" @click="openCreateModal" v-if="!isMobile">
+          Buat Catatan Baru
+        </button>
+      </div>
+
       <section class="notes-section" aria-label="Daftar catatan">
         <div class="section-heading">
           <div class="job-title-wrap">
@@ -687,16 +773,6 @@ onUnmounted(() => {
           >
           <!--Filter Status-->
           <h2>Kategori: {{ statusFilter ? statusFilter : "All" }}</h2>
-
-          <label class="search-box">
-            <span class="search-icon" aria-hidden="true">⌕</span>
-            <input
-              v-model="searchQuery"
-              type="search"
-              placeholder="Cari catatan..."
-              aria-label="Cari catatan"
-            />
-          </label>
         </div>
 
         <p v-if="errorMessage && !isModalOpen" class="page-alert" role="alert">
@@ -775,7 +851,7 @@ onUnmounted(() => {
                 <editPopUp
                   :user_id="item.user_id"
                   class="card-menu-list"
-                  @preview="previewItem(item)"
+                  @preview="previewCaption(item)"
                   @edit="editData(item)"
                   @hapus="deleteNote(item.id)"
                 />
@@ -802,9 +878,6 @@ onUnmounted(() => {
                       : item.rootcause
                   }}
                 </p>
-                <button class="preview-btn" @click="previewCaption(item)">
-                  Baca Selengkapnya ...
-                </button>
               </div>
             </article>
           </template>
@@ -889,17 +962,43 @@ onUnmounted(() => {
         <div v-else class="empty-state">
           <span class="state-icon" aria-hidden="true">✎</span>
           <h3>
-            {{ searchQuery ? "Catatan tidak ditemukan" : "Belum ada catatan" }}
+            {{
+              filterTanggal
+                ? "Tanggal tidak ditemukan"
+                : filterBulan
+                  ? "Bulan tidak ditemukan"
+                  : filterTahun
+                    ? "Tahun tidak ditemukan"
+                    : filterMesin
+                      ? "Mesin tidak ditemukan"
+                      : searchQuery
+                        ? "Data tidak ditemukan"
+                        : "Buat Baru"
+            }}
           </h3>
           <p>
             {{
-              searchQuery
-                ? "Coba gunakan kata kunci yang berbeda."
-                : "Mulai kumpulkan ide berhargamu."
+              filterTanggal
+                ? "Not Found"
+                : filterBulan
+                  ? "Not Found"
+                  : filterTahun
+                    ? "Not Found"
+                    : filterMesin
+                      ? "Not Found"
+                      : searchQuery
+                        ? "Coba gunakan kata kunci yang berbeda."
+                        : "Mulai kumpulkan ide berhargamu."
             }}
           </p>
           <button
-            v-if="!searchQuery"
+            v-if="
+              !filterTanggal &&
+              !filterBulan &&
+              !filterTahun &&
+              !filterMesin &&
+              !searchQuery
+            "
             class="primary-button"
             type="button"
             @click="openCreateModal"
@@ -919,13 +1018,14 @@ onUnmounted(() => {
       ＋
     </button>
 
-    <!--Modals Preview list-->
+    <!--Modals Preview yg ada foto nya list-->
     <div
       v-if="showPreviewModal"
       class="modal-backdrop-caption"
       @click.self="closePreviewItem"
     >
       <div class="caption-modal-preview">
+        <button class="close-btn" @click="closePreviewItem">✕</button>
         <div
           v-if="selectedItem && isImage(selectedItem.r2_key)"
           class="note-image-wrap-list"
@@ -999,7 +1099,7 @@ onUnmounted(() => {
       </div>
     </div>
 
-    <!-- Modals Caption-->
+    <!-- Modals Caption text Only-->
     <div
       v-if="showCaptionModal"
       class="modal-backdrop-caption"
@@ -1007,7 +1107,6 @@ onUnmounted(() => {
     >
       <div class="caption-modal" @click.stop>
         <button class="close-btn" @click="closeCaptionModal">✕</button>
-
         <h3>{{ selectedCaption.mesin }}</h3>
         <p class="caption-tgl">
           {{ formatDate(selectedCaption.tanggal) }}
@@ -1463,7 +1562,7 @@ onUnmounted(() => {
 
   .stat-card span {
     font-size: 5px;
-    font-weight: 300;
+    font-weight: 700;
   }
 }
 
@@ -1525,38 +1624,176 @@ onUnmounted(() => {
   font-size: 13px;
 }
 
-.search-box {
+.cari-wrap {
+  position: sticky;
+  top: 50px;
+  z-index: 5;
   display: flex;
-  width: min(280px, 100%);
-  height: 42px;
+  flex-wrap: wrap;
+  gap: 12px;
   align-items: center;
-  gap: 9px;
-  padding: 0 12px;
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  background: #fbfcfe;
-  box-sizing: border-box;
+  justify-content: space-between;
+  padding: 14px;
+  border-radius: 16px;
+  background: rgb(13, 16, 37);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
 }
 
-.search-icon {
-  color: #8b97a9;
-  font-size: 23px;
-  line-height: 1;
-  transform: rotate(-20deg);
+.tgl-filter {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.mesin-filter {
+  display: flex;
+
+  align-items: center;
+}
+
+.tgl-filter select {
+  min-width: 85px;
+  height: 40px;
+  padding: 0 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  background: #2b3040;
+  color: #f3f6fa;
+  font-size: 14px;
+  font-family: "Inter", sans-serif;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.mesin-filter select {
+  min-width: 150px;
+  height: 40px;
+  padding: 0 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  background: #2b3040;
+  color: #f3f6fa;
+  font-size: 14px;
+  font-family: "Inter", sans-serif;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.tgl-filter select:hover,
+.mesin-filter select:hover {
+  border-color: #3d8bff;
+}
+
+.tgl-filter select:focus,
+.mesin-filter select:focus {
+  outline: none;
+  border-color: #3d8bff;
+  box-shadow: 0 0 0 3px rgba(61, 139, 255, 0.15);
+}
+
+.search-box {
+  position: relative;
+  flex: 1;
+  min-width: 220px;
+}
+
+.search-box::before {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  opacity: 0.6;
 }
 
 .search-box input {
+  padding-left: 40px;
   width: 100%;
-  border: 0;
-  outline: 0;
-  background: transparent;
-  color: var(--bg);
-  font: inherit;
-  font-size: 13px;
+  height: 42px;
+  padding: 0 14px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: #2b3040;
+  color: #f3f6fa;
+  font-size: 14px;
+  transition: all 0.25s ease;
 }
 
 .search-box input::placeholder {
-  color: black;
+  color: #8f98aa;
+}
+
+.search-box input:focus {
+  outline: none;
+  border-color: #3d8bff;
+  box-shadow: 0 0 0 3px rgba(61, 139, 255, 0.15);
+}
+
+@media (max-width: 768px) {
+  .cari-wrap {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+  }
+
+  .tgl-filter,
+  .mesin-filter {
+    display: flex;
+    gap: 4px;
+  }
+  .mesin-filter {
+    margin-left: 0;
+  }
+
+  .tgl-filter select {
+    min-width: 65px;
+    height: 34px;
+    font-size: 12px;
+    padding: 0 8px;
+  }
+  .mesin-filter select {
+    width: 0px;
+    height: 34px;
+    font-size: 12px;
+    padding: 0 8px;
+  }
+
+  .search-box {
+    flex: 1;
+    min-width: 120px;
+  }
+
+  .search-box input {
+    height: 34px;
+    font-size: 12px;
+    padding: 0 10px;
+  }
+}
+
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 35px;
+  padding: 8px 14px;
+  border: none;
+  border-radius: 7px;
+  background: #2563eb;
+  color: #ffffff;
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background 0.2s,
+    transform 0.2s;
+}
+
+.btn-primary:hover {
+  background: #1d4ed8;
+}
+
+.btn-primary:active {
+  transform: scale(0.98);
 }
 
 .notes-grid {
@@ -2116,7 +2353,7 @@ onUnmounted(() => {
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 10;
+  z-index: 25;
 }
 
 .backdrop-loading {
@@ -2163,6 +2400,7 @@ onUnmounted(() => {
   background: rgb(183, 25, 25);
   font-size: 20px;
   cursor: pointer;
+  z-index: 10;
 }
 
 .caption-text {

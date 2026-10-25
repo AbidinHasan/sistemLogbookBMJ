@@ -452,13 +452,15 @@ onMounted(async () => {
         <table>
           <thead>
             <tr>
+              <th>No</th>
               <th>Nama</th>
               <th>Aksi</th>
             </tr>
           </thead>
 
           <tbody>
-            <tr v-for="item in filterDaftarMesin" :key="item.id">
+            <tr v-for="(item, index) in filterDaftarMesin" :key="item.id">
+              <td>{{ index + 1 }}</td>
               <td>{{ item.caption }}</td>
 
               <td>
@@ -479,6 +481,7 @@ onMounted(async () => {
         <table>
           <thead>
             <tr>
+              <th>No</th>
               <th>Nama</th>
               <th>Grup</th>
               <th>Status Akun</th>
@@ -487,10 +490,11 @@ onMounted(async () => {
 
           <tbody>
             <tr
-              v-for="item in filterAnggotaGrup"
+              v-for="(item, index) in filterAnggotaGrup"
               :key="item.id"
               :class="{ 'user-active': item.fullname === auth.fullname }"
             >
+              <td>{{ index + 1 }}</td>
               <td>{{ item.fullname }}</td>
               <td>{{ item.grup }}</td>
               <td>{{ item.role }}</td>
@@ -875,14 +879,39 @@ onMounted(async () => {
   border-bottom: none;
 }
 
-.daftar-mesin th:first-child,
-.daftar-mesin td:first-child {
-  width: 68%;
+.daftar-user th:nth-child(1),
+.daftar-user td:nth-child(1) {
+  width: 3%;
 }
 
-.daftar-mesin th:last-child,
-.daftar-mesin td:last-child {
-  width: 32%;
+.daftar-user th:nth-child(2),
+.daftar-user td:nth-child(2) {
+  width: 24%;
+}
+
+.daftar-user th:nth-child(3),
+.daftar-user td:nth-child(3) {
+  width: 16%;
+}
+
+.daftar-user th:nth-child(4),
+.daftar-user td:nth-child(4) {
+  width: 14%;
+}
+
+.daftar-mesin th:nth-child(1),
+.daftar-mesin td:nth-child(1) {
+  width: 3%;
+}
+
+.daftar-mesin th:nth-child(2),
+.daftar-mesin td:nth-child(2) {
+  width: 24%;
+}
+
+.daftar-mesin th:nth-child(3),
+.daftar-mesin td:nth-child(3) {
+  width: 16%;
 }
 
 .daftar-user-admin th:nth-child(1),
