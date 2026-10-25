@@ -598,20 +598,9 @@ const exportToExcel = () => {
   XLSX.writeFile(workbook, `Data Stok_${statusFilter.value || "Semua"}.xlsx`);
 };
 
-//Batas Sesion Login
-const checkSession = () => {
-  const expiredTime = Number(localStorage.getItem("expiredTime"));
-  if (!expiredTime || Date.now() > expiredTime) {
-    localStorage.removeItem("username");
-    localStorage.removeItem("expiredTime");
-    alert("Session telah berakhir, silakan login kembali.");
-    router.push("/login");
-  }
-};
-
 onMounted(() => {
   loadNotes();
-  checkSession();
+
   window.addEventListener("scroll", handleScroll);
 });
 

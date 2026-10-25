@@ -585,22 +585,10 @@ const getFileIcon = (url) => {
   }
 };
 
-//Batas Sesion Login
-let intervalId;
-const checkSession = () => {
-  const expiredTime = Number(localStorage.getItem("expiredTime"));
-  if (!expiredTime || Date.now() > expiredTime) {
-    localStorage.removeItem("username");
-    localStorage.removeItem("expiredTime");
-    alert("Session telah berakhir, silakan login kembali.");
-    LogOut();
-  }
-};
-
 onMounted(() => {
   loadNotes();
   loadDaftarMesin();
-  checkSession();
+
   window.addEventListener("scroll", handleScroll);
 });
 

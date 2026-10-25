@@ -428,7 +428,7 @@ const login = async () => {
         id: user.id,
       });
 
-      router.push("/");
+      window.location.href = "/";
     }
   } catch (error) {
     errorMessage.value =

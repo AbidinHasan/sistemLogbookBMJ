@@ -605,21 +605,9 @@ const lamaPengerjaan = (mulai, selesai) => {
   return selesai ? waktu : `${waktu} (Open)`;
 };
 
-//Batas Sesion Login
-const checkSession = () => {
-  const expiredTime = Number(localStorage.getItem("expiredTime"));
-  if (!expiredTime || Date.now() > expiredTime) {
-    localStorage.removeItem("username");
-    localStorage.removeItem("expiredTime");
-    alert("Session telah berakhir, silakan login kembali.");
-    router.push("/login");
-  }
-};
-
 onMounted(() => {
   loadNotes();
   loadDaftarMesin();
-  checkSession();
   window.addEventListener("scroll", handleScroll);
 });
 

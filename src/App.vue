@@ -1,12 +1,70 @@
 <script setup>
-import { onMounted } from "vue";
+import { onMounted, onUnmounted, ref } from "vue";
 import { RouterView } from "vue-router";
 import { useAuthStore } from "./stores/auth.js";
 import Footer from "./components/Footer.vue";
 import TopBar from "./components/TopBar.vue";
 import SlideBar from "./components/SlideBar.vue";
+import akhirSesi from "./components/SessionEnd.vue";
 
 const auth = useAuthStore();
+const sesiModal = ref(false);
+const SESSION_TIME = 43200000;
+
+const tutupModals = () => {
+  sesiModal.value = false;
+  window.location.href = "/";
+};
+
+const resetSession = () => {
+  localStorage.setItem("expiredTime", String(Date.now() + SESSION_TIME));
+};
+
+const checkSession = () => {
+  const expiredTime = Number(localStorage.getItem("expiredTime"));
+
+  if (!expiredTime || Date.now() > expiredTime) {
+    localStorage.removeItem("username");
+    localStorage.removeItem("expiredTime");
+
+    sesiModal.value = true;
+
+    auth.logout();
+  }
+};
+
+const activityEvents = [
+  "click",
+  "mousemove",
+  "keydown",
+  "scroll",
+  "touchstart",
+  "input",
+];
+
+onMounted(() => {
+  if (!auth.username) return;
+
+  resetSession();
+  // cek session setiap detik
+  const interval = setInterval(checkSession, 60000);
+
+  // reset session saat ada aktivitas
+  activityEvents.forEach((event) => {
+    window.addEventListener(event, resetSession);
+  });
+
+  // simpan untuk cleanup
+  window._sessionInterval = interval;
+});
+
+onUnmounted(() => {
+  activityEvents.forEach((event) => {
+    window.removeEventListener(event, resetSession);
+  });
+
+  clearInterval(window._sessionInterval);
+});
 </script>
 
 <template>
@@ -21,6 +79,7 @@ const auth = useAuthStore();
     <footer :class="auth.fullname ? 'footer-sidebar' : 'footer-full'">
       <Footer />
     </footer>
+    <akhirSesi v-if="sesiModal" @oke="tutupModals" />
   </div>
 </template>
 
