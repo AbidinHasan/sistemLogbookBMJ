@@ -360,7 +360,11 @@ onMounted(async () => {
         Tambah User
       </button>
 
-      <button class="btn-primary" @click="openModalMesin">
+      <button
+        v-if="auth.role === 'admin' || auth.role === 'super-admin'"
+        class="btn-primary"
+        @click="openModalMesin"
+      >
         Tambah Daftar Mesin
       </button>
     </div>
@@ -444,7 +448,10 @@ onMounted(async () => {
     </div>
   </div>
 
-  <div class="profile-lists">
+  <div
+    v-if="auth.role === 'admin' || auth.role === 'super-admin'"
+    class="profile-lists"
+  >
     <div class="daftar-mesin">
       <div class="card">
         <h2>Mesin yang terdaftar</h2>
@@ -775,7 +782,7 @@ onMounted(async () => {
   padding: 14px;
   box-sizing: border-box;
   max-height: 360px;
-  overflow: auto;
+  overflow-y: auto;
   overscroll-behavior: contain;
   scrollbar-width: thin;
   background: #ffffff;
