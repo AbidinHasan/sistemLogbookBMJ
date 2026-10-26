@@ -448,11 +448,11 @@ onMounted(async () => {
     </div>
   </div>
 
-  <div
-    v-if="auth.role === 'admin' || auth.role === 'super-admin'"
-    class="profile-lists"
-  >
-    <div class="daftar-mesin">
+  <div class="profile-lists">
+    <div
+      v-if="auth.role === 'admin' || auth.role === 'super-admin'"
+      class="daftar-mesin"
+    >
       <div class="card">
         <h2>Mesin yang terdaftar</h2>
 
@@ -783,7 +783,7 @@ onMounted(async () => {
   box-sizing: border-box;
   max-height: 360px;
   overflow-y: auto;
-  overscroll-behavior: contain;
+  overscroll-behavior: auto;
   scrollbar-width: thin;
   background: #ffffff;
   color: #334155;
