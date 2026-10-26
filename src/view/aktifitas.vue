@@ -517,7 +517,8 @@ const exportToExcel = () => {
     Description: item.deskripsi,
     Root_Cause: item.rootcause,
     Start_Time: formatDateGetJam(item.tanggal),
-    End_Time: formatDateGetJam(item.finish),
+    End_Time: item.finish ? formatDateGetJam(item.finish) : "-",
+    Close_date: item.finish ? formatDateOnly(item.finish) : "-",
     Status: item.status_mesin,
   }));
 
@@ -532,6 +533,7 @@ const exportToExcel = () => {
     { wch: 15 }, //rootcause
     { wch: 10 }, //start
     { wch: 10 }, //end
+    { wch: 17 }, // TanggalClose
     { wch: 15 }, //status
   ];
   const workbook = XLSX.utils.book_new();
@@ -540,7 +542,7 @@ const exportToExcel = () => {
   const range = XLSX.utils.decode_range(worksheet["!ref"]);
 
   for (let row = 1; row <= range.e.r; row++) {
-    const cellAddress = XLSX.utils.encode_cell({ r: row, c: 9 }); // kolom Status (index 9)
+    const cellAddress = XLSX.utils.encode_cell({ r: row, c: 10 }); // kolom Status (index 10)
     const cell = worksheet[cellAddress];
 
     if (!cell) continue;
