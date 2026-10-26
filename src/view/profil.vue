@@ -465,7 +465,7 @@ onMounted(async () => {
 
               <td>
                 <button class="delete-btn" @click="deleteMesin(item.id)">
-                  Hapus User
+                  Hapus
                 </button>
               </td>
             </tr>
