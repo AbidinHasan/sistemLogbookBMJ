@@ -4,7 +4,8 @@ import { backendApi, API } from "../services/api.js";
 import { useAuthStore } from "../stores/auth.js";
 import Multiselect from "vue-multiselect";
 import "vue-multiselect/dist/vue-multiselect.min.css";
-import * as XLSX from "xlsx";
+
+import XLSX from "xlsx-js-style";
 
 import DownloadKecil from "../components/DownloadKecilBtn.vue";
 import pdfLogo from "../assets/icons8-pdf-60.png";
@@ -50,6 +51,25 @@ const filterBulan = ref("");
 const filterTahun = ref("");
 const filterMesin = ref("");
 const searchQuery = ref("");
+
+const namaBulan = computed(() => {
+  const bulan = [
+    "Januari",
+    "Februari",
+    "Maret",
+    "April",
+    "Mei",
+    "Juni",
+    "Juli",
+    "Agustus",
+    "September",
+    "Oktober",
+    "November",
+    "Desember",
+  ];
+
+  return bulan[Number(filterBulan.value) - 1] || "";
+});
 
 const previewItem = (item) => {
   selectedItem.value = item;
@@ -492,32 +512,100 @@ const exportToExcel = () => {
     Tanggal: formatDateOnly(item.tanggal),
     Shift: item.shift,
     Grup: item.grup_shift,
+    Nama: item.user.fullname,
     Machine: item.mesin,
     Description: item.deskripsi,
     Root_Cause: item.rootcause,
     Start_Time: formatDateGetJam(item.tanggal),
     End_Time: formatDateGetJam(item.finish),
     Status: item.status_mesin,
-    Created: formatJam(item.created_at),
-    Nama: item.user.fullname,
-    UpdateBy: item.closeby.fullname,
   }));
 
   const worksheet = XLSX.utils.json_to_sheet(data);
   worksheet["!cols"] = [
     { wch: 17 }, // Tanggal
-    { wch: 10 },
-    { wch: 10 },
-    { wch: 10 },
-    { wch: 10 },
-    { wch: 15 },
-    { wch: 15 },
+    { wch: 10 }, //shift
+    { wch: 10 }, //grup
+    { wch: 10 }, //nama
+    { wch: 10 }, //mesin
+    { wch: 15 }, //deskrip
+    { wch: 15 }, //rootcause
+    { wch: 10 }, //start
+    { wch: 10 }, //end
+    { wch: 15 }, //status
   ];
   const workbook = XLSX.utils.book_new();
 
+  // sheet status
+  const range = XLSX.utils.decode_range(worksheet["!ref"]);
+
+  for (let row = 1; row <= range.e.r; row++) {
+    const cellAddress = XLSX.utils.encode_cell({ r: row, c: 9 }); // kolom Status (index 9)
+    const cell = worksheet[cellAddress];
+
+    if (!cell) continue;
+
+    if (cell.v === "Downtime") {
+      cell.s = {
+        fill: {
+          fgColor: { rgb: "FF0000" }, // merah
+        },
+        font: {
+          color: { rgb: "FFFFFF" },
+          bold: true,
+        },
+      };
+    } else if (cell.v === "No Downtime") {
+      cell.s = {
+        fill: {
+          fgColor: { rgb: "00B050" }, // hijau
+        },
+        font: {
+          color: { rgb: "FFFFFF" },
+          bold: true,
+        },
+      };
+    } else if (cell.v === "Monitoring") {
+      cell.s = {
+        fill: {
+          fgColor: { rgb: "FFFF00" }, // kuning
+        },
+        font: {
+          color: { rgb: "000000" },
+          bold: true,
+        },
+      };
+    }
+  }
+
+  //Header Color
+  for (let col = range.s.c; col <= range.e.c; col++) {
+    const cellAddress = XLSX.utils.encode_cell({ r: 0, c: col });
+
+    if (worksheet[cellAddress]) {
+      worksheet[cellAddress].s = {
+        fill: {
+          patternType: "solid",
+          fgColor: { rgb: "1F4E78" },
+        },
+        font: {
+          color: { rgb: "FFFFFF" },
+          bold: true,
+        },
+        alignment: {
+          horizontal: "center",
+          vertical: "center",
+        },
+      };
+    }
+  }
+
   XLSX.utils.book_append_sheet(workbook, worksheet, "Catatan");
 
-  XLSX.writeFile(workbook, `Logbook MTC_${statusFilter.value || "Semua"}.xlsx`);
+  XLSX.writeFile(
+    workbook,
+    `Logbook MTC_${namaBulan.value + "_" || ""}${statusFilter.value || "All"}.xlsx`,
+  );
 };
 
 const formatDateOnly = (date) => {
@@ -755,7 +843,7 @@ onUnmounted(() => {
           />
         </label>
         <button class="btn-primary" @click="openCreateModal" v-if="!isMobile">
-          Buat Catatan Baru
+          Buat Aktifitas Baru
         </button>
       </div>
 

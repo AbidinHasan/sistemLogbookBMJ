@@ -400,7 +400,7 @@ const submitForm = async () => {
 
 const downloadFile = (key, caption) => {
   const a = document.createElement("a");
-  const filename = "DocUtility " + caption;
+  const filename = "Aktifitas " + caption;
 
   a.href = `${API.download}${encodeURIComponent(key)}?filename=${encodeURIComponent(filename)}`;
 
