@@ -2,9 +2,6 @@
 import { computed, onMounted, onUnmounted, ref, watch } from "vue";
 import { backendApi, API } from "../services/api.js";
 import { useAuthStore } from "../stores/auth.js";
-import Multiselect from "vue-multiselect";
-import "vue-multiselect/dist/vue-multiselect.min.css";
-
 import XLSX from "xlsx-js-style";
 
 import DownloadKecil from "../components/DownloadKecilBtn.vue";
@@ -256,6 +253,15 @@ const filteredNotes = computed(() => {
   }
 
   return result.sort((a, b) => new Date(b.tanggal) - new Date(a.tanggal));
+});
+
+const filterDaftarMesin = computed(() => {
+  let result = [...mesinList.value];
+
+  return result.sort((a, b) => {
+    // sisanya urut A-Z
+    return a.caption.localeCompare(b.caption, "id");
+  });
 });
 
 const loadDaftarMesin = async () => {
@@ -828,7 +834,7 @@ onUnmounted(() => {
           <select v-model="filterMesin">
             <option value="">Mesin</option>
             <option
-              v-for="item in mesinList"
+              v-for="item in filterDaftarMesin"
               :key="item.id"
               :value="item.caption"
             >
