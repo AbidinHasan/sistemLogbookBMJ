@@ -1293,7 +1293,7 @@ onUnmounted(() => {
             <select v-model="form.mesin">
               <option value="">Pilih Mesin</option>
               <option
-                v-for="item in mesinList"
+                v-for="item in filterDaftarMesin"
                 :key="item.id"
                 :value="item.caption"
               >

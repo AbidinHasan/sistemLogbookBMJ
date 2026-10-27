@@ -287,6 +287,15 @@ const filteredNotes = computed(() => {
   return result.sort((a, b) => new Date(b.tanggal) - new Date(a.tanggal));
 });
 
+const filterDaftarMesin = computed(() => {
+  let result = [...mesinList.value];
+
+  return result.sort((a, b) => {
+    // sisanya urut A-Z
+    return a.caption.localeCompare(b.caption, "id");
+  });
+});
+
 const loadDaftarMesin = async () => {
   try {
     const response = await backendApi.get("/mtc/mesin", { timeout: 30000 });
@@ -784,7 +793,7 @@ onUnmounted(() => {
           <select v-model="filterMesin">
             <option value="">Mesin</option>
             <option
-              v-for="item in mesinList"
+              v-for="item in filterDaftarMesin"
               :key="item.id"
               :value="item.caption"
             >
