@@ -14,7 +14,7 @@ import zipLogo from "../assets/icons8-zip-64.png";
 import coretan from "../assets/icons8-note-taking-with-text-document-and-editing-pen-100.png";
 import LoadingContent from "../components/loadingSend.vue";
 import ScrollToTopButton from "../components/ScrollUpButton.vue";
-import RadioSelect from "../components/radioSelect.vue";
+import TopDowntime from "../components/TopDowntime.vue";
 import RadioFormulir from "../components/RadioutkForm.vue";
 import summaryMonth from "../components/ChardPerform.vue";
 import SwitchView from "../components/SwitchView.vue";
@@ -249,7 +249,7 @@ const filteredNotes = computed(() => {
 
   if (query) {
     result = result.filter((note) =>
-      `${note.user.fullname || ""}${note.deskripsi || ""}${note.rootcause || ""}${note.mesin || ""}`
+      `${note.user.fullname || ""}${note.deskripsi || ""}${note.rootcause || ""}${note.mesin || ""}${note.status_mesin || ""}`
         .toLowerCase()
         .includes(query),
     );
@@ -1067,6 +1067,7 @@ onUnmounted(() => {
             </p>
           </div>
         </section>
+        <TopDowntime />
       </div>
     </div>
 

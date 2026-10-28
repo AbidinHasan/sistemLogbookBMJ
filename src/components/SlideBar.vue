@@ -17,7 +17,7 @@ const LogOut = () => {
     <router-link to="/" class="menu">Dashboard</router-link>
     <router-link to="/aktifitas" class="menu">Manajemen Aktifitas</router-link>
 
-    <router-link to="/profil" class="menu">Profil</router-link>
+    <router-link to="/profil" class="menu">Akun</router-link>
 
     <div class="user-info">
       <div class="logout-btn">

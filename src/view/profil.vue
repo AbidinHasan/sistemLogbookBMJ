@@ -430,7 +430,10 @@ onMounted(async () => {
       <form @submit.prevent="simpanDaftarMesin">
         <textarea
           v-model="form.caption"
-          placeholder="Satu baris = satu data"
+          placeholder="Satu baris = satu data
+Roto
+Offset
+IPAL"
           rows="8"
           class="input-textarea"
         ></textarea>
@@ -1027,7 +1030,7 @@ onMounted(async () => {
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 10;
+  z-index: 20;
 }
 
 .backdrop-loading {
@@ -1082,10 +1085,10 @@ onMounted(async () => {
 
 .modal-card {
   width: min(92vw, 600px);
-  max-height: 90vh;
+  max-height: 70vh;
   overflow-y: auto;
   padding: 20px;
-
+  scrollbar-width: thin;
   background: #fff;
   border-radius: 14px;
   box-shadow: 0 10px 35px rgba(0, 0, 0, 0.15);

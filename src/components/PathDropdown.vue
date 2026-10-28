@@ -12,7 +12,7 @@
       </li>
 
       <li class="element">
-        <router-link class="label item-link" to="/profil">Profil</router-link>
+        <router-link class="label item-link" to="/profil">Akun</router-link>
       </li>
       <li class="delete" v-if="auth.username">
         <a class="label item-link" @click="LogOut">Logout</a>
