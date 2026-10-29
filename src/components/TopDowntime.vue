@@ -1,7 +1,9 @@
 <script setup>
 import { ref, onMounted, computed } from "vue";
 import { backendApi } from "../services/api";
+import { useAuthStore } from "../stores/auth";
 
+const auth = useAuthStore();
 const downtimeList = ref([]);
 
 const deteksiTahun = ref(new Date().getFullYear().toString()); //ini utk performa berubah tiap tahun
@@ -10,7 +12,10 @@ const filterTahun = ref(new Date().getFullYear().toString());
 
 const loadDowntime = async () => {
   try {
-    const response = await backendApi.get("/mtc/downtime", { timeout: 30000 });
+    const response = await backendApi.get("/mtc/downtime", {
+      params: { user_id: auth.id },
+      timeout: 30000,
+    });
     downtimeList.value = response.data.results || [];
   } catch (err) {
     console.error(err);
@@ -26,6 +31,7 @@ const tahunIni = computed(() => {
       `${note.tgl_downtime || ""} `.toLowerCase().includes(query),
     );
   }
+
   // filter tanggal
   if (filterBulan.value || filterTahun.value) {
     result = result.filter((note) => {
@@ -152,12 +158,12 @@ onMounted(loadDowntime);
 
 .card-header h3 {
   margin: 0;
-  font-size: 18px;
+  font-size: 0.9rem;
   color: #333;
 }
 
 .card-header span {
-  font-size: 12px;
+  font-size: 0.7rem;
   background: #f1f5f9;
   color: #64748b;
   padding: 4px 10px;
@@ -181,9 +187,9 @@ onMounted(loadDowntime);
   align-items: center;
 }
 .tgl-filter select {
-  min-width: 85px;
-  height: 40px;
-  padding: 0 12px;
+  min-width: 55px;
+  height: 30px;
+  padding: 0 5px;
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 10px;
   background: #dee0e5;

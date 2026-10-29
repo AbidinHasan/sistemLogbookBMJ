@@ -33,6 +33,11 @@ body {
   margin: 0;
   background: var(--bg);
 }
+@media (min-width: 1024px) {
+  body {
+    zoom: 0.9;
+  }
+}
 
 h1,
 h2 {

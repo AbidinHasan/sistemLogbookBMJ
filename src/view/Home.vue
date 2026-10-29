@@ -1540,18 +1540,8 @@ onUnmounted(() => {
 
 .container {
   display: flex;
-  gap: 20px;
-}
-
-.Riwayat {
-  border-radius: 18px;
-  margin-top: 20px;
-  background: rgb(13, 16, 37);
-  border: 1px solid #404347;
-  overflow-y: auto;
-  height: 500px;
-
-  scrollbar-width: thin;
+  gap: 1px;
+  width: auto;
 }
 
 .notes-kanan {
