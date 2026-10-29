@@ -1415,7 +1415,7 @@ onUnmounted(() => {
           </label>
           <label class="form-field" for="note-caption">
             <span>Note:</span>
-            <textarea v-model="form.note"></textarea>
+            <textarea v-model="form.note" placeholder="Ready ..."></textarea>
           </label>
 
           <p v-if="errorMessage" class="form-alert" role="alert">
@@ -1648,7 +1648,8 @@ onUnmounted(() => {
   .note-count {
     display: flex;
     gap: 8px;
-    overflow-x: auto;
+    width: auto;
+    overflow-y: auto;
     overflow-y: hidden;
     padding-bottom: 4px;
     margin-bottom: 24px;
@@ -2429,7 +2430,7 @@ onUnmounted(() => {
   }
 
   .note-modal {
-    max-height: calc(100vh - 20px);
+    max-height: calc(90vh - 20px);
     width: 350px;
     padding: 22px 18px;
     border-radius: 17px;
