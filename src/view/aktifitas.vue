@@ -125,6 +125,7 @@ const form = ref({
   rootcause: "",
   statusMesin: "",
   status: "",
+  note: "",
 });
 
 //reduce jmlah status Tahun ini...berubah tiap tahun
@@ -331,7 +332,6 @@ const editDataStatus = (item) => {
     mesin: item.mesin || "",
     rootcause: item.rootcause || "",
     statusMesin: item.status_mesin || "",
-
     status: item.status || "On Progress",
   };
   selectedFile.value = null;
@@ -380,7 +380,7 @@ const submitForm = async () => {
     formData.append("rootcause", form.value.rootcause || "");
     formData.append("status", form.value.status);
     formData.append("mesin", form.value.mesin);
-
+    formData.append("note", form.value.note);
     formData.append("id", auth.id);
     formData.append("closebyid", auth.id);
 
@@ -1002,6 +1002,7 @@ onUnmounted(() => {
                   <span
                     class="list-status-dot"
                     :class="item.status?.toLowerCase().replace(' ', '-')"
+                    :title="item.status"
                   >
                   </span>
                   <button
@@ -1040,6 +1041,9 @@ onUnmounted(() => {
                   }}
                 </h4>
                 <br />
+                <p class="time-stamp" v-if="item.note">
+                  Note: <strong>{{ item.note }}</strong>
+                </p>
                 <p class="time-stamp" v-if="item.finish">
                   (Close) {{ formatDateIndo(item.finish) }} by
                   <strong>{{ item.closeby.fullname }}</strong>
@@ -1188,6 +1192,9 @@ onUnmounted(() => {
         <strong>Root Cause:</strong>
         <p class="caption-text">
           {{ selectedItem?.rootcause }}
+        </p>
+        <p class="caption-text" v-if="selectedItem.note">
+          Note: {{ selectedItem.note }}
         </p>
         <p class="caption-text-mark">
           created by: {{ selectedItem.user.fullname }}
@@ -1405,6 +1412,10 @@ onUnmounted(() => {
               :judul2="`Completed`"
               :judul3="`Pending`"
             />
+          </label>
+          <label class="form-field" for="note-caption">
+            <span>Note:</span>
+            <textarea v-model="form.note"></textarea>
           </label>
 
           <p v-if="errorMessage" class="form-alert" role="alert">

@@ -978,6 +978,7 @@ onUnmounted(() => {
                     <span
                       class="list-status-dot"
                       :class="item.status?.toLowerCase().replace(' ', '-')"
+                      :title="item.status"
                     >
                     </span>
                     <p v-if="item.user.fullname" class="list-lamawaktu">
@@ -1012,6 +1013,9 @@ onUnmounted(() => {
                     }}
                   </h4>
                   <br />
+                  <p class="time-stamp" v-if="item.note">
+                    Note: <strong>{{ item.note }}</strong>
+                  </p>
                   <p class="time-stamp" v-if="item.finish">
                     (Close)
                     {{ formatDateIndo(item.finish) }} by
@@ -1067,7 +1071,7 @@ onUnmounted(() => {
             </p>
           </div>
         </section>
-        <TopDowntime />
+        <section class="notes-kanan"><TopDowntime /></section>
       </div>
     </div>
 
@@ -1145,6 +1149,10 @@ onUnmounted(() => {
         <strong>Root Cause:</strong>
         <p class="caption-text">
           {{ selectedItem?.rootcause }}
+        </p>
+
+        <p class="caption-text" v-if="selectedItem.note">
+          Note: {{ selectedItem.note }}
         </p>
         <p class="caption-text-mark">
           created by: {{ selectedItem.user.fullname }}
@@ -1546,17 +1554,16 @@ onUnmounted(() => {
   scrollbar-width: thin;
 }
 
-.note-chard {
-  flex: 3;
+.notes-kanan {
+  flex: 4;
 }
 
 .notes-section {
   padding: 26px;
-
   border-radius: 18px;
   background: rgb(13, 16, 37);
   box-shadow: 0 8px 28px rgb(35 54 83 / 4%);
-  flex: 7;
+  flex: 6;
 }
 
 .section-heading {
