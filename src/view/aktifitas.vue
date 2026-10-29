@@ -2244,7 +2244,7 @@ onUnmounted(() => {
   font-weight: 650;
 }
 
-.form-field input:not([type="file"]),
+.form-field input[type="datetime-local"],
 .form-field textarea {
   width: 100%;
   min-height: 43px;
@@ -2293,6 +2293,15 @@ onUnmounted(() => {
   font: inherit;
   font-size: 12px;
   box-sizing: border-box;
+}
+
+.form-field input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  opacity: 1;
+  width: 20px;
+  height: 20px;
+
+  filter: brightness(0) saturate(100%); /**Warna Ikon tgl bawaan browser */
 }
 
 .optional-label {
@@ -2421,6 +2430,7 @@ onUnmounted(() => {
 
   .note-modal {
     max-height: calc(100vh - 20px);
+    width: 350px;
     padding: 22px 18px;
     border-radius: 17px;
   }
